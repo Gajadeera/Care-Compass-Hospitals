@@ -28,9 +28,9 @@ class User
     {
         try {
             // Validate role
-            $allowedRoles = ['administrator', 'staff', 'patient'];
+            $allowedRoles = ['administrator', 'staff', 'patient', 'doctor', 'superAdministrator'];
             if (!in_array($this->role, $allowedRoles)) {
-                throw new Exception("Invalid role. Allowed roles are: administrator, staff, patient.");
+                throw new Exception("Invalid role. Allowed roles are: administrator, staff, patient, doctor, superAdministrator.");
             }
 
             // Validate gender
@@ -60,11 +60,77 @@ class User
             $stmt->bindParam(":phone_number", $this->phone_number);
             $stmt->bindParam(":address", $this->address);
 
+            if ($stmt->execute()) {
+                return $this->conn->lastInsertId(); // Return the ID of the newly created user
+            } else {
+                return false;
+            }
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    public function createPatient($userId, $data)
+    {
+        try {
+            $query = "INSERT INTO patients 
+                      (user_id, insurance_number, blood_type, allergies, emergency_contact) 
+                      VALUES (:user_id, :insurance_number, :blood_type, :allergies, :emergency_contact)";
+
+            $stmt = $this->conn->prepare($query);
+
+            // Bind parameters
+            $stmt->bindParam(":user_id", $userId);
+            $stmt->bindParam(":insurance_number", $data['insurance_number']);
+            $stmt->bindParam(":blood_type", $data['blood_type']);
+            $stmt->bindParam(":allergies", $data['allergies']);
+            $stmt->bindParam(":emergency_contact", $data['emergency_contact']);
+
             return $stmt->execute();
         } catch (PDOException $e) {
             throw new Exception("Database error: " . $e->getMessage());
         }
     }
+
+    public function createDoctor($userId, $data)
+    {
+        try {
+            $query = "INSERT INTO doctors 
+                      (user_id, specialization, qualifications) 
+                      VALUES (:user_id, :specialization, :qualifications)";
+
+            $stmt = $this->conn->prepare($query);
+
+            // Bind parameters
+            $stmt->bindParam(":user_id", $userId);
+            $stmt->bindParam(":specialization", $data['specialization']);
+            $stmt->bindParam(":qualifications", $data['qualifications']);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    public function createStaff($userId, $data)
+    {
+        try {
+            $query = "INSERT INTO staff 
+                      (user_id, position) 
+                      VALUES (:user_id, :position)";
+
+            $stmt = $this->conn->prepare($query);
+
+            // Bind parameters
+            $stmt->bindParam(":user_id", $userId);
+            $stmt->bindParam(":position", $data['position']);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
 
     public function read()
     {
@@ -109,6 +175,107 @@ class User
             $stmt->bindParam(":phone_number", $this->phone_number);
             $stmt->bindParam(":address", $this->address);
             $stmt->bindParam(":id", $this->id);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    public function readById($userId)
+    {
+        $query = "SELECT * FROM users WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $userId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getPatientData($userId)
+    {
+        $query = "SELECT * FROM patients WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $userId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getDoctorData($userId)
+    {
+        $query = "SELECT * FROM doctors WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $userId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getStaffData($userId)
+    {
+        $query = "SELECT * FROM staff WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $userId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function updatePatient($userId, $data)
+    {
+        try {
+            $query = "UPDATE patients SET
+                  insurance_number = :insurance_number,
+                  blood_type = :blood_type,
+                  allergies = :allergies,
+                  emergency_contact = :emergency_contact
+                  WHERE user_id = :user_id";
+
+            $stmt = $this->conn->prepare($query);
+
+            // Bind parameters
+            $stmt->bindParam(":insurance_number", $data['insurance_number']);
+            $stmt->bindParam(":blood_type", $data['blood_type']);
+            $stmt->bindParam(":allergies", $data['allergies']);
+            $stmt->bindParam(":emergency_contact", $data['emergency_contact']);
+            $stmt->bindParam(":user_id", $userId);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    public function updateDoctor($userId, $data)
+    {
+        try {
+            $query = "UPDATE doctors SET
+                  specialization = :specialization,
+                  qualifications = :qualifications
+                  WHERE user_id = :user_id";
+
+            $stmt = $this->conn->prepare($query);
+
+            // Bind parameters
+            $stmt->bindParam(":specialization", $data['specialization']);
+            $stmt->bindParam(":qualifications", $data['qualifications']);
+            $stmt->bindParam(":user_id", $userId);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    public function updateStaff($userId, $data)
+    {
+        try {
+            $query = "UPDATE staff SET
+                  position = :position
+                  WHERE user_id = :user_id";
+
+            $stmt = $this->conn->prepare($query);
+
+            // Bind parameters
+            $stmt->bindParam(":position", $data['position']);
+            $stmt->bindParam(":user_id", $userId);
 
             return $stmt->execute();
         } catch (PDOException $e) {

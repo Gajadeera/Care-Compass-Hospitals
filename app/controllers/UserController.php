@@ -1,7 +1,7 @@
 <?php
-session_start();
 require __DIR__ . '/../models/User.php';
-
+ini_set('session.cookie_lifetime', 0); // Session cookie expires when the browser is closed
+session_start();
 class UserController
 {
     private $user;
@@ -33,7 +33,34 @@ class UserController
             $this->user->address = $_POST['address'];
 
             // Attempt to create the user
-            if ($this->user->create()) {
+            $userId = $this->user->create();
+
+            if ($userId) {
+                // Save role-specific data
+                switch ($this->user->role) {
+                    case 'patient':
+                        $this->user->createPatient($userId, [
+                            'insurance_number' => $_POST['insurance_number'],
+                            'blood_type' => $_POST['blood_type'],
+                            'allergies' => $_POST['allergies'],
+                            'emergency_contact' => $_POST['emergency_contact']
+                        ]);
+                        break;
+
+                    case 'doctor':
+                        $this->user->createDoctor($userId, [
+                            'specialization' => $_POST['specialization'],
+                            'qualifications' => $_POST['qualifications']
+                        ]);
+                        break;
+
+                    case 'staff':
+                        $this->user->createStaff($userId, [
+                            'position' => $_POST['position']
+                        ]);
+                        break;
+                }
+
                 // Redirect to login page after successful registration
                 require __DIR__ . '/../views/User/login.php';
                 exit();
@@ -41,7 +68,6 @@ class UserController
                 echo "Failed to create user.";
             }
         } else {
-            // Render the registration form
             require __DIR__ . '/../views/User/create.php';
         }
     }
@@ -49,7 +75,7 @@ class UserController
     public function update()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Assign form data to user properties
+            // Handle form submission for updating user data
             $this->user->id = $_POST['id'];
             $this->user->password = $_POST['password']; // Password will be hashed in the model
             $this->user->email = $_POST['email'];
@@ -63,13 +89,60 @@ class UserController
 
             // Attempt to update the user
             if ($this->user->update()) {
+                // Update role-specific data
+                switch ($this->user->role) {
+                    case 'patient':
+                        $this->user->updatePatient($this->user->id, [
+                            'insurance_number' => $_POST['insurance_number'],
+                            'blood_type' => $_POST['blood_type'],
+                            'allergies' => $_POST['allergies'],
+                            'emergency_contact' => $_POST['emergency_contact']
+                        ]);
+                        break;
+
+                    case 'doctor':
+                        $this->user->updateDoctor($this->user->id, [
+                            'specialization' => $_POST['specialization'],
+                            'qualifications' => $_POST['qualifications']
+                        ]);
+                        break;
+
+                    case 'staff':
+                        $this->user->updateStaff($this->user->id, [
+                            'position' => $_POST['position']
+                        ]);
+                        break;
+                }
+
                 echo "User updated successfully!";
             } else {
                 echo "Failed to update user.";
             }
         } else {
-            // Render the update user form
-            echo "Render update user form here.";
+            // Fetch user data for the update form
+            $userId = $_GET['id'] ?? null;
+            if (!$userId) {
+                die("User ID is required.");
+            }
+
+            // Fetch user data
+            $user = $this->user->readById($userId);
+            if (!$user) {
+                die("User not found.");
+            }
+
+            // Fetch role-specific data
+            $roleSpecificData = [];
+            if ($user['role'] === 'patient') {
+                $roleSpecificData = $this->user->getPatientData($userId);
+            } elseif ($user['role'] === 'doctor') {
+                $roleSpecificData = $this->user->getDoctorData($userId);
+            } elseif ($user['role'] === 'staff') {
+                $roleSpecificData = $this->user->getStaffData($userId);
+            }
+
+            // Render the update form with user data
+            require __DIR__ . '/../views/User/update.php';
         }
     }
 
@@ -111,6 +184,7 @@ class UserController
                 $_SESSION['gender'] = $loggedInUser['gender'];
                 $_SESSION['date_of_birth'] = $loggedInUser['date_of_birth'];
 
+
                 header("Location: /Hospital/app/views/User/profile.php");
                 exit(); // Ensure no further code is executed after redirection
             } else {
@@ -120,5 +194,13 @@ class UserController
             // Render the login form
             require __DIR__ . '/../views/User/login.php';
         }
+    }
+
+    public function logout()
+    {
+        session_unset(); // Unset all session variables
+        session_destroy(); // Destroy the session
+        require __DIR__ . '/../views/User/login.php';
+        exit();
     }
 }

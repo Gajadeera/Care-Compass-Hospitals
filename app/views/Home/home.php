@@ -3,7 +3,7 @@ require __DIR__ . '/../Partials/header.php';
 ?>
 
 <div>
-    <h2>Home page landed</h2>
+    <h1 class="mb-4">Welcome to the Care Compass Hospital</h1>
 </div>
 
 <?php

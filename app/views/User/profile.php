@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../Partials/header.php';
+ini_set('session.cookie_lifetime', 0); // Session cookie expires when the browser is closed
 session_start();
 ?>
 
@@ -55,7 +56,8 @@ session_start();
                         <?php elseif ($_SESSION['role'] === 'superAdmin') : ?>
                             <h3 class="card-title mb-3">Super Admin Actions</h3>
                             <div class="list-group">
-                                <a href="/Hospital/app/views/superAdmin/add_admin.php" class="list-group-item list-group-item-action">Add Administrator</a>
+                                <a href="/Hospital/public/users/create" class="list-group-item list-group-item-action">Add Administrator</a>
+                                <a href="/Hospital/public/users/update?id=<?= $user['id'] ?> " class="list-group-item list-group-item-action">Edit User</a>
                                 <a href="/Hospital/app/views/superAdmin/manage_admin.php" class="list-group-item list-group-item-action">Manage All Users</a>
                                 <a href="/Hospital/app/views/superAdmin/view_system_logs.php" class="list-group-item list-group-item-action">View System Logs</a>
                                 <a href="/Hospital/app/views/superAdmin/manage_hospital_settings.php" class="list-group-item list-group-item-action">Manage Hospital Settings</a>

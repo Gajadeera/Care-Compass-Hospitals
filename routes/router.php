@@ -62,6 +62,9 @@ switch ($url) {
     case "users/login":
         $userController->login();
         break;
+    case "users/logout":
+        $userController->logout();
+        break;
 
     // case "doctors":
     //     $doctorController->index();

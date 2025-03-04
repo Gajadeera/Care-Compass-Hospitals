@@ -1,0 +1,44 @@
+/* Ensure the body and html take up the full height of the viewport */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Flexbox layout to push the footer to the bottom */
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main content area should grow to fill available space */
+main {
+    flex-grow: 1;
+}
+
+/* Footer styling */
+.footer {
+    background-color: #343a40;
+    /* Dark background */
+    color: white;
+    /* White text */
+    padding: 1rem 0;
+    /* Add some padding */
+    text-align: center;
+    /* Center-align text */
+}
+
+.footer a {
+    color: white;
+    /* White links */
+    text-decoration: none;
+    /* Remove underline */
+    margin: 0 10px;
+    /* Add spacing between links */
+}
+
+.footer a:hover {
+    color: #f8f9fa;
+    /* Lighten links on hover */
+}
