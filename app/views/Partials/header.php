@@ -4,13 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital System</title>
+    <title>Care Compass Hospital</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Hospital/public/style.css"> <!-- External CSS -->
+    <link rel="stylesheet" href="/Hospital/public/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,12 +36,13 @@
                 <ul class="navbar-nav ms-auto">
                     <?php
                     if (isset($_SESSION['role'])) : ?>
-                        <!-- If user is logged in, show Logout -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Hospital/public/users/profile"><?php echo $_SESSION['first_name'] ?></a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/Hospital/public/users/logout">Logout</a>
                         </li>
                     <?php else : ?>
-                        <!-- If user is not logged in, show Login and Register -->
                         <li class="nav-item">
                             <a class="nav-link" href="/Hospital/public/users/login">Login</a>
                         </li>
@@ -51,7 +54,4 @@
             </div>
         </div>
     </nav>
-
-    <!-- Main Content -->
     <main class="container mt-4 flex-grow-1">
-        <!-- Page-specific content will be included here -->

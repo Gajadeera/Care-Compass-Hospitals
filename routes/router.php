@@ -1,28 +1,22 @@
 <?php
-// Autoload classes (if not using Composer autoloading)
+
 spl_autoload_register(function ($class) {
     require_once __DIR__ . '/' . str_replace('\\', '/', $class) . '.php';
 });
 
-// Include configuration and controllers
 require __DIR__ . '/../config/database.php';
-// require "./app/controllers/PatientController.php";
+require __DIR__ . '/../app/controllers/PatientController.php';
 require __DIR__ . '/../app/controllers/UserController.php';
 require __DIR__ . '/../app/controllers/HomeController.php';
-// require "./app/controllers/DoctorController.php";
-// require "./app/controllers/AppointmentController.php";
+require __DIR__ . '/../app/controllers/DoctorController.php';
 
-// Initialize controllers
-// $patientController = new PatientController($pdo);
+$patientController = new PatientController($pdo);
 $userController = new UserController($pdo);
 $homeController = new HomeController();
-// $doctorController = new DoctorController($pdo);
-// $appointmentController = new AppointmentController($pdo);
+$doctorController = new DoctorController($pdo);
 
-// Get the URL from the query parameter
 $url = isset($_GET['url']) ? rtrim($_GET['url'], '/') : '';
 
-// Route the request
 switch ($url) {
     case "":
         $homeController->index();
@@ -40,15 +34,36 @@ switch ($url) {
         $homeController->service();
         break;
 
-    case "patients":
-        $patientController->index();
+    case "patients/makeAppointment":
+        $patientController->bookAppointment();
         break;
-    case "patients/create":
-        $patientController->create();
+
+    case "patients/viewAppointments":
+        $patientController->viewAppointments();
         break;
+
+    case "patients/processPayment":
+        $patientController->processPayment();
+        break;
+
+    case "patients/viewMedicalRecords":
+        $patientController->viewMedicalRecords();
+        break;
+
+    case "patients/viewLabResults":
+        $patientController->viewLabResults();
+        break;
+
+    case "patients/submitQuery":
+        $patientController->submitQuery();
+        break;
+
 
     case "users":
         $userController->index();
+        break;
+    case "users/profile":
+        $userController->profile();
         break;
     case "users/create":
         $userController->create();
@@ -66,30 +81,14 @@ switch ($url) {
         $userController->logout();
         break;
 
-    // case "doctors":
-    //     $doctorController->index();
-    //     break;
-    // case "doctors/create":
-    //     $doctorController->create();
-    //     break;
-    // case "doctors/search":
-    //     $doctorController->search();
-    //     break;
-
-    // case "appointments":
-    //     $appointmentController->index();
-    //     break;
-    // case "appointments/createAppointment":
-    //     $appointmentController->createAppointment();
-    //     break;
-
-    // case "administrator":
-    //     $userController->login();
-    //     break;
-
+    case "doctors/viewAppointments":
+        $doctorController->viewAppointments();
+        break;
+    case "doctors/search":
+        $doctorController->searchDoctors();
+        break;
     default:
-        // Handle 404 - Page not found
         http_response_code(404);
-        echo "404 Not Found. Go Back.";
+        echo "404 Not Found";
         break;
 }

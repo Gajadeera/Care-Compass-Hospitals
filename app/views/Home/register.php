@@ -12,6 +12,9 @@ require __DIR__ . '/../Partials/header.php';
             <a href="/Hospital/public/patients/create" class="btn btn-success btn-lg">Register as Doctor</a>
         </div>
     </div>
+    <div class="text-center my-4">
+        <li class="list-inline-item"><a href="/Hospital/public/" class="btn btn-outline-primary"><i class="fab fa-facebook-f"></i> Go Back</a></li>
+    </div>
 </div>
 
 <?php

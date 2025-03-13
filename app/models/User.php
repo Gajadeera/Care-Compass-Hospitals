@@ -5,8 +5,6 @@ class User
 {
     private $conn;
     private $table_name = "users";
-
-    // User properties
     public $id;
     public $password;
     public $email;
@@ -24,32 +22,32 @@ class User
         $this->conn = $db;
     }
 
+    public function getConnection()
+    {
+        return $this->conn;
+    }
+
     public function create()
     {
         try {
-            // Validate role
             $allowedRoles = ['administrator', 'staff', 'patient', 'doctor', 'superAdministrator'];
             if (!in_array($this->role, $allowedRoles)) {
                 throw new Exception("Invalid role. Allowed roles are: administrator, staff, patient, doctor, superAdministrator.");
             }
 
-            // Validate gender
             $allowedGenders = ['male', 'female', 'other'];
             if (!in_array($this->gender, $allowedGenders)) {
                 throw new Exception("Invalid gender. Allowed genders are: male, female, other.");
             }
 
-            // Hash the password
             $this->password = password_hash($this->password, PASSWORD_BCRYPT);
 
-            // Insert query
             $query = "INSERT INTO " . $this->table_name . " 
                       (password, email, role, first_name, last_name, gender, date_of_birth, phone_number, address) 
                       VALUES (:password, :email, :role, :first_name, :last_name, :gender, :date_of_birth, :phone_number, :address)";
 
             $stmt = $this->conn->prepare($query);
 
-            // Bind parameters
             $stmt->bindParam(":password", $this->password);
             $stmt->bindParam(":email", $this->email);
             $stmt->bindParam(":role", $this->role);
@@ -61,7 +59,7 @@ class User
             $stmt->bindParam(":address", $this->address);
 
             if ($stmt->execute()) {
-                return $this->conn->lastInsertId(); // Return the ID of the newly created user
+                return $this->conn->lastInsertId();
             } else {
                 return false;
             }
@@ -78,8 +76,6 @@ class User
                       VALUES (:user_id, :insurance_number, :blood_type, :allergies, :emergency_contact)";
 
             $stmt = $this->conn->prepare($query);
-
-            // Bind parameters
             $stmt->bindParam(":user_id", $userId);
             $stmt->bindParam(":insurance_number", $data['insurance_number']);
             $stmt->bindParam(":blood_type", $data['blood_type']);
@@ -100,8 +96,6 @@ class User
                       VALUES (:user_id, :specialization, :qualifications)";
 
             $stmt = $this->conn->prepare($query);
-
-            // Bind parameters
             $stmt->bindParam(":user_id", $userId);
             $stmt->bindParam(":specialization", $data['specialization']);
             $stmt->bindParam(":qualifications", $data['qualifications']);
@@ -120,8 +114,6 @@ class User
                       VALUES (:user_id, :position)";
 
             $stmt = $this->conn->prepare($query);
-
-            // Bind parameters
             $stmt->bindParam(":user_id", $userId);
             $stmt->bindParam(":position", $data['position']);
 
@@ -134,7 +126,6 @@ class User
 
     public function read()
     {
-        // Select all fields
         $query = "SELECT id, email, role, first_name, last_name, gender, date_of_birth, phone_number, address, created_at 
                   FROM " . $this->table_name;
         $stmt = $this->conn->prepare($query);
@@ -145,7 +136,6 @@ class User
     public function update()
     {
         try {
-            // Hash the password if it's being updated
             if (!empty($this->password)) {
                 $this->password = password_hash($this->password, PASSWORD_BCRYPT);
             }
@@ -163,8 +153,6 @@ class User
                       WHERE id = :id";
 
             $stmt = $this->conn->prepare($query);
-
-            // Bind parameters
             $stmt->bindParam(":password", $this->password);
             $stmt->bindParam(":email", $this->email);
             $stmt->bindParam(":role", $this->role);
@@ -229,8 +217,6 @@ class User
                   WHERE user_id = :user_id";
 
             $stmt = $this->conn->prepare($query);
-
-            // Bind parameters
             $stmt->bindParam(":insurance_number", $data['insurance_number']);
             $stmt->bindParam(":blood_type", $data['blood_type']);
             $stmt->bindParam(":allergies", $data['allergies']);
@@ -252,8 +238,6 @@ class User
                   WHERE user_id = :user_id";
 
             $stmt = $this->conn->prepare($query);
-
-            // Bind parameters
             $stmt->bindParam(":specialization", $data['specialization']);
             $stmt->bindParam(":qualifications", $data['qualifications']);
             $stmt->bindParam(":user_id", $userId);
@@ -272,8 +256,6 @@ class User
                   WHERE user_id = :user_id";
 
             $stmt = $this->conn->prepare($query);
-
-            // Bind parameters
             $stmt->bindParam(":position", $data['position']);
             $stmt->bindParam(":user_id", $userId);
 
@@ -299,7 +281,6 @@ class User
     public function login()
     {
         try {
-            // Query to fetch user by email
             $query = "SELECT id, password, email, role, first_name, last_name, gender, date_of_birth, phone_number, address, created_at 
                       FROM " . $this->table_name . " 
                       WHERE email = :email LIMIT 1";
@@ -310,10 +291,7 @@ class User
 
             if ($stmt->rowCount() > 0) {
                 $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                // Verify the password
                 if (password_verify($this->password, $row['password'])) {
-                    // Return only necessary user data
                     return [
                         'id' => $row['id'],
                         'email' => $row['email'],
@@ -326,9 +304,51 @@ class User
                 }
             }
 
-            return false; // Login failed
+            return false;
         } catch (PDOException $e) {
             throw new Exception("Database error: " . $e->getMessage());
         }
+    }
+
+    public function getPatientId($user_id)
+    {
+        try {
+            $query = "SELECT id FROM patients WHERE user_id = :user_id LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $row['id'];
+            }
+
+            return false;
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    public function getProfileData($userId)
+    {
+        $userData = $this->readById($userId);
+
+        if (!$userData) {
+            return null;
+        }
+
+        $roleSpecificData = [];
+        if ($userData['role'] === 'patient') {
+            $roleSpecificData = $this->getPatientData($userId);
+        } elseif ($userData['role'] === 'doctor') {
+            $roleSpecificData = $this->getDoctorData($userId);
+        } elseif ($userData['role'] === 'staff') {
+            $roleSpecificData = $this->getStaffData($userId);
+        }
+
+        return [
+            'user' => $userData,
+            'roleSpecificData' => $roleSpecificData
+        ];
     }
 }
